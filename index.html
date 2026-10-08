@@ -3,343 +3,160 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Spotify Now Playing</title>
+<title>Song Widget V2</title>
 <style>
-*{box-sizing:border-box}
-html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;background:#07070a;color:#fff}
-body{min-height:100vh;display:grid;place-items:center;padding:18px;overflow-x:hidden}
-#app{--accent:#1ed760;--accent2:#0d2918;--dark:#08090b;position:relative;width:min(920px,100%);overflow:hidden;border:1px solid #ffffff18;border-radius:30px;background:linear-gradient(135deg,var(--dark),#101115);box-shadow:0 30px 100px #000b;isolation:isolate;transition:background 1s ease}
-.bg{position:absolute;inset:-18%;z-index:-4;background:transparent;filter:none;opacity:0;pointer-events:none}
-.artGlow{position:absolute;inset:-24%;z-index:-3;background-position:center;background-size:cover;background-repeat:no-repeat;filter:blur(58px) saturate(1.65) brightness(1.12);opacity:.88;transform:scale(1.16);transition:background-image .18s ease,opacity .18s ease,filter .18s ease;pointer-events:none}
-.wave{position:absolute;z-index:-2;width:45%;aspect-ratio:1;border-radius:50%;left:30%;top:25%;background:transparent;filter:none;opacity:0;pointer-events:none}
-.playing .wave{animation-duration:1s;opacity:.2}
-@keyframes breathe{from{transform:scale(.7)}to{transform:scale(1.3)}}
-.content{padding:28px}
-.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.brand{font-size:11px;font-weight:900;letter-spacing:.18em;color:#ffffff8c}
-.status{font-size:12px;color:#ffffff80}
-.layout{display:grid;grid-template-columns:minmax(250px,390px) minmax(0,1fr);gap:42px;align-items:center;margin-top:28px}
-.art{width:min(390px,100%);aspect-ratio:1;margin:auto;position:relative}
-.cover{width:100%;height:100%;border-radius:24px;background:linear-gradient(145deg,#1d1e24,#101116);border:1px solid #ffffff18;display:grid;place-items:center;overflow:hidden;box-shadow:0 24px 70px #0009}
-.cover img{width:100%;height:100%;object-fit:cover;display:none}
-.placeholder{font-size:64px;color:#ffffff20}
-.vinyl{position:absolute;width:70%;aspect-ratio:1;border-radius:50%;left:15%;top:15%;z-index:-1;background:repeating-radial-gradient(circle,#101014 0 5px,#2a2a2e 6px 8px);transition:.5s}
-.playing .vinyl{animation:spin 8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.info{min-width:0}
-.kicker{font-size:11px;font-weight:900;letter-spacing:.17em;color:#ffffff70}
-.titlebox{width:100%;overflow:hidden;white-space:nowrap;margin-top:9px}
-.title{display:inline-block;max-width:100%;font-size:clamp(32px,5vw,60px);font-weight:900;line-height:1.03;letter-spacing:-.04em}
-.title.moving{padding-right:80px;animation:marquee 11s linear infinite}
-@keyframes marquee{0%,12%{transform:translateX(0)}78%,100%{transform:translateX(var(--move))}}
-.artist{font-size:19px;color:#fff;margin-top:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.album{font-size:13px;color:#ffffff70;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.progress{margin-top:28px;width:100%;min-width:0}
-.bar{height:7px;width:100%;background:#ffffff18;border-radius:99px;overflow:hidden;cursor:pointer}
-.fill{height:100%;width:0;background:var(--accent);border-radius:99px;box-shadow:0 0 15px var(--accent);transition:width .25s linear}
-.times{display:flex;justify-content:space-between;color:#ffffff60;font-size:11px;margin-top:7px}
-.controls{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:22px}
-.ctrl{width:50px;height:50px;border-radius:50%;border:1px solid var(--accent);background:#0b100d;color:var(--accent);font-size:18px;font-weight:900;display:grid;place-items:center;box-shadow:0 0 0 1px #ffffff08 inset,0 0 18px rgba(30,215,96,.12);transition:transform .18s ease,background .18s ease,box-shadow .18s ease}
-.ctrl:hover{background:rgba(30,215,96,.12);transform:scale(1.06);box-shadow:0 0 24px rgba(30,215,96,.22)}
-.ctrl:active{transform:scale(.94)}
-.ctrl.main{width:62px;height:62px;background:#1ed760;color:#071009;border:0;font-size:22px;box-shadow:0 8px 30px rgba(30,215,96,.28)}
-.ctrl.main:hover{background:#25e56b;box-shadow:0 10px 36px rgba(30,215,96,.38)}
-.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
-button{font-family:inherit;cursor:pointer}
-.connect,.open{min-height:46px;border-radius:999px;padding:12px 18px;font-weight:850}
-.connect{border:0;background:var(--accent);color:#071009}
-.open{border:1px solid #ffffff18;background:#ffffff0d;color:#fff}
-.open:disabled{opacity:.4;cursor:not-allowed}
-.msg{font-size:12px;line-height:1.5;color:#ffffff70;margin-top:14px}
-
-.lyrics-wrap{margin-top:28px}.lyrics-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border:1px solid #ffffff18;border-radius:18px;background:#ffffff0a;color:#fff;font:inherit;font-weight:850;cursor:pointer;transition:.2s}.lyrics-toggle:hover{background:#ffffff12}.lyrics-toggle .chev{transition:transform .25s ease;color:#ffffff70}.lyrics-wrap.open .chev{transform:rotate(180deg)}.lyrics-panel{margin-top:10px;max-height:0;overflow:hidden;opacity:0;transition:max-height .35s ease,opacity .25s ease}.lyrics-wrap.open .lyrics-panel{max-height:330px;opacity:1}.lyrics-scroll{max-height:310px;overflow-y:auto;padding:22px 20px;border:1px solid #ffffff12;border-radius:18px;background:#050608aa;scrollbar-width:thin}.lyrics-line{font-size:17px;line-height:1.75;color:#ffffff72;margin:0 0 17px}.lyrics-line:last-child{margin-bottom:0}.lyrics-note{font-size:12px;color:#ffffff50;line-height:1.5;margin-top:14px}.lyrics-loading{color:#ffffff65;font-size:15px;line-height:1.7;text-align:center;padding:18px 8px}.lyrics-error{color:#ffffff58;font-size:15px;line-height:1.7;text-align:center;padding:18px 8px}.lyrics-meta{font-size:11px;color:#ffffff38;text-align:center;margin-top:12px}@media(max-width:720px){.lyrics-line{font-size:16px}.lyrics-scroll{padding:20px 17px}}
-
-.hidden{display:none!important}
-.dots{position:absolute;inset:0;z-index:-2;overflow:hidden;pointer-events:none}
-.dots i{position:absolute;width:4px;height:4px;border-radius:50%;background:var(--accent);box-shadow:0 0 14px var(--accent);opacity:.5;bottom:-10px;animation:rise 5s linear infinite}
-@keyframes rise{to{transform:translateY(-700px) translateX(var(--x));opacity:0}}
-@media(max-width:720px){
-body{padding:8px}.content{padding:20px}.layout{grid-template-columns:1fr;gap:24px}.art{width:min(310px,82vw)}.info{text-align:center}.progress{margin-top:24px}.artist,.album{text-align:center}.actions{justify-content:center}.titlebox{text-align:center}.controls{margin-top:18px}
-}
-@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+:root{--accent:#1ed760;--rgb:30,215,96;--text:#fff;--muted:#aaa}
+*{box-sizing:border-box}body{margin:0;background:#080808;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif;overflow-x:hidden}
+.back{position:fixed;inset:-50px;z-index:-2;background:center/cover no-repeat;filter:blur(55px) saturate(1.4);transform:scale(1.15);opacity:.55}.back:after{content:"";position:absolute;inset:0;background:linear-gradient(#0002,#000b)}
+.ambient{position:fixed;inset:-20%;z-index:-1;pointer-events:none;overflow:hidden;mix-blend-mode:screen;opacity:.72}
+.light{position:absolute;width:45vw;height:45vw;min-width:280px;min-height:280px;border-radius:50%;
+  background:radial-gradient(circle,rgba(var(--rgb),.55) 0%,rgba(var(--rgb),.22) 28%,transparent 68%);
+  filter:blur(35px);transform:translate3d(0,0,0);transition:background 1.1s ease,filter 1.1s ease;
+  animation:floatLight 13s ease-in-out infinite alternate}
+.light1{left:-8%;top:0}.light2{right:-12%;top:8%;animation-delay:-4s;animation-duration:16s}
+.light3{left:12%;bottom:-18%;animation-delay:-7s;animation-duration:19s}
+.light4{right:8%;bottom:-25%;animation-delay:-2s;animation-duration:15s}
+@keyframes floatLight{0%{transform:translate3d(-4%,3%,0) scale(.92)}
+50%{transform:translate3d(5%,-5%,0) scale(1.08)}
+100%{transform:translate3d(-2%,6%,0) scale(1)}}
+@media(prefers-reduced-motion:reduce){.light{animation:none}.light{transition:none}}
+.app{min-height:100vh;padding:22px;display:grid;place-items:center}.grid{width:min(1150px,100%);display:grid;grid-template-columns:minmax(300px,550px) 1fr;gap:34px;align-items:center}
+.brand{font-weight:800;margin-bottom:16px;display:flex;gap:9px;align-items:center}.dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 18px rgb(var(--rgb)/.7)}
+.coverbox{aspect-ratio:1;border-radius:25px;overflow:hidden;position:relative;background:#151515;box-shadow:0 30px 80px #0009;cursor:zoom-in}.cover{width:100%;height:100%;object-fit:cover;display:block}.placeholder{position:absolute;inset:0;display:grid;place-items:center;color:#777;font-size:80px}.hint{position:absolute;right:14px;bottom:14px;background:#0008;padding:8px 11px;border-radius:99px;font-size:12px}
+.status{font-size:13px;color:var(--muted);margin-bottom:12px}.status i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#777;margin-right:7px}.status.live i{background:var(--accent);box-shadow:0 0 12px rgb(var(--rgb)/.8)}
+h1{font-size:clamp(32px,5vw,58px);line-height:.98;margin:0;letter-spacing:-2px}.artist{font-size:24px;font-weight:650;margin:14px 0 4px}.album{margin:0;color:var(--muted)}
+.progress{margin-top:26px}.bar{height:5px;background:#fff2;border-radius:99px;cursor:pointer}.fill{height:100%;width:0;background:var(--accent);border-radius:99px}.times{display:flex;justify-content:space-between;color:#888;font-size:11px;margin-top:7px}
+.controls{display:flex;gap:15px;align-items:center;margin-top:18px}.btn{border:0;width:50px;height:50px;border-radius:50%;background:#fff1;color:#fff;display:grid;place-items:center;cursor:pointer}.btn:hover{background:#fff2}.btn.main{width:66px;height:66px;background:#fff;color:#000}.btn svg{width:23px;height:23px;fill:currentColor}
+.connect{margin-top:20px;border:0;border-radius:99px;padding:13px 19px;background:var(--accent);color:#000;font-weight:800;cursor:pointer}
+.panel{height:min(70vh,620px);border:1px solid #fff2;border-radius:25px;background:#0005;backdrop-filter:blur(22px);overflow:hidden;display:flex;flex-direction:column}.head{padding:19px 21px;border-bottom:1px solid #fff1;display:flex;justify-content:space-between}.head h2{margin:0;font-size:18px}.source{font-size:11px;color:#777}.lyrics{overflow:auto;padding:25px 21px;scroll-behavior:smooth}.line{margin:0 0 18px;color:#777;font-size:clamp(17px,2.2vw,23px);line-height:1.35;font-weight:650;transition:.35s}.line.active{color:#fff;transform:scale(1.035);text-shadow:0 0 25px rgb(var(--rgb)/.3)}.empty{color:#777;line-height:1.5}
+.modal{position:fixed;inset:0;z-index:5;display:none;place-items:center;background:#000c;backdrop-filter:blur(20px);padding:20px}.modal.open{display:grid}.modal img{max-width:94vw;max-height:88vh;border-radius:18px;touch-action:pinch-zoom}.close{position:fixed;top:18px;right:18px;border:0;border-radius:50%;width:44px;height:44px;background:#fff2;color:#fff;font-size:25px}
+@media(max-width:820px){.grid{grid-template-columns:1fr}.coverbox{width:min(84vw,520px);margin:auto}.panel{height:55vh}}
 </style>
 </head>
 <body>
-<main id="app">
-<div class="bg"></div><div class="artGlow" id="artGlow"></div><div class="wave"></div><div class="dots" id="dots"></div>
-<div class="content">
-<header class="top"><span class="brand">NOW PLAYING · SPOTIFY</span><span id="status" class="status">Desconectado</span></header>
-<section class="layout">
-<div class="art">
-<div class="cover"><span id="placeholder" class="placeholder">♪</span><img id="cover" alt="Portada del álbum"></div>
-<div class="vinyl"></div>
+<div class="back" id="back"></div>
+<div class="ambient" aria-hidden="true">
+  <div class="light light1" id="light1"></div>
+  <div class="light light2" id="light2"></div>
+  <div class="light light3" id="light3"></div>
+  <div class="light light4" id="light4"></div>
 </div>
-<div class="info">
-<div class="kicker">CURRENT TRACK</div>
-<div class="titlebox"><div id="title" class="title">Conecta Spotify</div></div>
-<div id="artist" class="artist">Tu canción aparecerá aquí</div>
-<div id="album" class="album">Conecta tu cuenta para empezar</div>
-<div class="progress">
-<div id="bar" class="bar"><div id="fill" class="fill"></div></div>
-<div class="times"><span id="current">0:00</span><span id="total">0:00</span></div>
-</div>
-<div id="controls" class="controls hidden">
-<button id="prev" class="ctrl" type="button" aria-label="Canción anterior">‹‹</button>
-<button id="toggle" class="ctrl main" type="button">▶</button>
-<button id="next" class="ctrl" type="button" aria-label="Siguiente canción">››</button>
-</div>
-<div class="actions">
-<button id="connect" class="connect" type="button">🎧 Conectar Spotify</button>
-<button id="open" class="open" type="button" disabled>↗ Abrir en Spotify</button><button id="logout" class="open hidden" type="button">Cerrar sesión</button>
-</div>
-<div id="msg" class="msg">Conecta Spotify para detectar automáticamente lo que estás escuchando.</div>
-<div class="lyrics-wrap" id="lyricsWrap"><button id="lyricsToggle" class="lyrics-toggle" type="button" aria-expanded="false"><span>♫ Letra</span><span class="chev">⌄</span></button><div class="lyrics-panel" aria-hidden="true"><div class="lyrics-scroll" id="lyricsScroll"><div class="lyrics-loading">Reproduce una canción para buscar su letra…</div></div></div><div class="lyrics-note">Letra no sincronizada · desliza libremente</div><div class="lyrics-meta" id="lyricsMeta"></div></div>
-
+<main class="app"><div class="grid">
+<section>
+<div class="brand"><span class="dot"></span>Song Widget V2</div>
+<div class="coverbox" id="coverbox">
+<img id="cover" class="cover" alt="Portada" style="display:none">
+<div id="placeholder" class="placeholder">♪</div><div class="hint">Tocar para ampliar</div>
 </div>
 </section>
+<section>
+<div class="status" id="status"><i></i>Desconectado de Spotify</div>
+<h1 id="title">Conecta Spotify</h1><p class="artist" id="artist">Tu canción aparecerá aquí</p><p class="album" id="album">Portada, colores y letras automáticas</p>
+<div class="progress"><div class="bar" id="bar"><div class="fill" id="fill"></div></div><div class="times"><span id="cur">0:00</span><span id="dur">0:00</span></div></div>
+<div class="controls">
+<button class="btn" id="prev" aria-label="Anterior"></button><button class="btn main" id="play" aria-label="Play"></button><button class="btn" id="next" aria-label="Siguiente"></button>
 </div>
-</main>
+<button class="connect" id="connect">Conectar con Spotify</button>
+<div class="panel" style="margin-top:24px"><div class="head"><h2>Letra</h2><span class="source">LRCLIB</span></div><div class="lyrics" id="lyrics"><p class="empty">Conecta Spotify para cargar la canción y sus letras.</p></div></div>
+</section>
+</div></main>
+<div class="modal" id="modal"><button class="close" id="close">×</button><img id="modalImg" alt="Portada ampliada"></div>
 <script>
 const CLIENT_ID="7cd5bc8f5dc048a388537fb6d19a74b9";
-const REDIRECT_URI=window.location.origin+window.location.pathname;
-const SCOPES="user-read-currently-playing user-read-playback-state user-modify-playback-state";
-const $=id=>document.getElementById(id);
-let token="",trackId="",duration=0,trackUrl="",playing=false,deviceId="";
-const lyricsWrap=$("lyricsWrap"),lyricsToggle=$("lyricsToggle"),lyricsPanel=lyricsWrap.querySelector(".lyrics-panel"),lyricsScroll=$("lyricsScroll"),lyricsMeta=$("lyricsMeta");
-let lyricsRequestId=0;
-lyricsToggle.addEventListener("click",()=>{const open=lyricsWrap.classList.toggle("open");lyricsToggle.setAttribute("aria-expanded",String(open));lyricsPanel.setAttribute("aria-hidden",String(!open));});
-function escapeHtml(v){return String(v||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));}
-function renderLyrics(text){
- const clean=String(text||"").replace(/\r/g,"").trim();
- if(!clean){lyricsScroll.innerHTML='<div class="lyrics-error">No hay letra disponible para esta canción.</div>';lyricsMeta.textContent="";return;}
- const lines=clean.split("\n");
- lyricsScroll.innerHTML=lines.map(line=>`<p class="lyrics-line">${escapeHtml(line)||"&nbsp;"}</p>`).join("");
- lyricsScroll.scrollTop=0;
-}
-async function loadLyrics(item){
- const request=++lyricsRequestId;
- lyricsScroll.innerHTML='<div class="lyrics-loading">Buscando letra…</div>';lyricsMeta.textContent="";
- try{
-  const params=new URLSearchParams({track_name:item.name,artist_name:item.artists?.map(a=>a.name).join(", ")||""});
-  if(item.album?.name)params.set("album_name",item.album.name);
-  if(item.duration_ms)params.set("duration",String(Math.round(item.duration_ms/1000)));
-  const r=await fetch("https://lrclib.net/api/get?"+params.toString(),{headers:{"Lrclib-Client":"Spotify Song Widget V12 (https://neiraprox.github.io/spotify-song-widget/)"},cache:"no-store"});
-  if(request!==lyricsRequestId)return;
-  if(r.status===404){renderLyrics("");return;}
-  if(!r.ok)throw new Error("lyrics request failed");
-  const d=await r.json();
-  if(request!==lyricsRequestId)return;
-  renderLyrics(d.plainLyrics || "");
-  if(d.trackName && d.artistName)lyricsMeta.textContent=`Fuente: LRCLIB · ${d.artistName} — ${d.trackName}`;
- }catch(e){
-  if(request!==lyricsRequestId)return;
-  lyricsScroll.innerHTML='<div class="lyrics-error">No se pudo cargar la letra ahora.<br>Inténtalo de nuevo en unos segundos.</div>';lyricsMeta.textContent="";
- }
+const REDIRECT_URI="https://neiraprox.github.io/spotify-song-widget/";
+const SCOPES=["user-read-currently-playing","user-read-playback-state","user-modify-playback-state"];
+const API="https://api.spotify.com/v1";
+let token=localStorage.getItem("spotify_access_token"),expires=+localStorage.getItem("spotify_expires_at")||0,currentId=null,lyrics=[],position=0,duration=0,poll;
+const $=x=>document.getElementById(x);
+const icons={play:'<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>',pause:'<svg viewBox="0 0 24 24"><path d="M7 5h4v14H7zm6 0h4v14h-4z"/></svg>',prev:'<svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zm3 7 9-7v14z"/></svg>',next:'<svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM6 5l9 7-9 7z"/></svg>'};
+$("play").innerHTML=icons.play;$("prev").innerHTML=icons.prev;$("next").innerHTML=icons.next;
+function time(ms){let s=Math.floor(ms/1000);return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}
+function status(t,live=false){$("status").className="status"+(live?" live":"");$("status").innerHTML="<i></i>"+t}
+function setPlay(x){$("play").innerHTML=x?icons.pause:icons.play}
+function rgb(hex){let m=hex.replace("#","").match(/../g);return m?m.map(x=>parseInt(x,16)).join(","): "30,215,96"}
+function applyPalette(colors){
+  if(!colors.length) return;
+  const primary = colors[0];
+  document.documentElement.style.setProperty("--accent", primary);
+  document.documentElement.style.setProperty("--rgb", rgb(primary));
+
+  const ids=["light1","light2","light3","light4"];
+  ids.forEach((id,i)=>{
+    const el=$(id);
+    const c=colors[i%colors.length];
+    el.style.background=`radial-gradient(circle,${c}99 0%,${c}3b 27%,transparent 68%)`;
+  });
 }
 
-
-function b64(x){return btoa(String.fromCharCode(...new Uint8Array(x))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")}
-function rand(){const a=new Uint8Array(64);crypto.getRandomValues(a);return b64(a)}
-async function sha(v){return b64(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(v)))}
-function fmt(ms){let s=Math.max(0,Math.floor(ms/1000));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}
-async function login(){
- const verifier=rand(),state=rand();localStorage.setItem("spotify_verifier",verifier);localStorage.setItem("spotify_state",state);
- const u=new URL("https://accounts.spotify.com/authorize");u.search=new URLSearchParams({client_id:CLIENT_ID,response_type:"code",redirect_uri:REDIRECT_URI,scope:SCOPES,code_challenge_method:"S256",code_challenge:await sha(verifier),state}).toString();location.href=u;
-}
-async function callback(){
- const p=new URLSearchParams(location.search),code=p.get("code");if(!code)return;
- if(p.get("state")!==localStorage.getItem("spotify_state")){$("msg").textContent="No se pudo verificar la autorización.";return}
- const r=await fetch("https://accounts.spotify.com/api/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({client_id:CLIENT_ID,grant_type:"authorization_code",code,redirect_uri:REDIRECT_URI,code_verifier:localStorage.getItem("spotify_verifier")})});
- const d=await r.json();if(!r.ok){$("msg").textContent="Spotify rechazó la autorización.";return}
- token=d.access_token;localStorage.setItem("spotify_access_token",token);localStorage.setItem("spotify_connected","1");history.replaceState({},document.title,REDIRECT_URI);$("connect").classList.add("hidden");$("controls").classList.remove("hidden");$("logout").classList.remove("hidden");$("status").textContent="Conectado";poll();
-}
-function title(t){
- $("title").textContent=t;
- requestAnimationFrame(()=>{const e=$("title"),w=e.parentElement,over=e.scrollWidth-w.clientWidth;if(over>6){e.classList.add("moving");e.style.setProperty("--move",`-${over+70}px`)}else{e.classList.remove("moving");e.style.removeProperty("--move")}})
-}
-function colors(src){
- try{
-  const u=src || $("cover").currentSrc || $("cover").src;
-  if(!u)return;
-  const glow=$("artGlow");
-  // Instant visual change: the artwork itself is always the base of the ambient light.
-  glow.style.backgroundImage=`url("${u}")`;
-  glow.style.opacity=".88";
-
-  const img=$("cover");
-  // Attempt extraction from the already-rendered cover. If the browser blocks pixel access,
-  // the blurred artwork still supplies the correct colors visually.
+function theme(img){
   try{
-   const c=document.createElement("canvas"),x=c.getContext("2d",{willReadFrequently:true});
-   const s=36;c.width=s;c.height=s;x.drawImage(img,0,0,s,s);
-   const d=x.getImageData(0,0,s,s).data,b=new Map();
-   for(let i=0;i<d.length;i+=4){
-    const r=d[i],g=d[i+1],bl=d[i+2],mx=Math.max(r,g,bl),mn=Math.min(r,g,bl);
-    if(mx<18 || (mx>245 && mx-mn<14))continue;
-    const qr=Math.round(r/16)*16,qg=Math.round(g/16)*16,qb=Math.round(bl/16)*16;
-    const sat=mx?((mx-mn)/mx):0;
-    const weight=1+sat*2;
-    const k=`${qr},${qg},${qb}`;
-    b.set(k,(b.get(k)||0)+weight);
-   }
-   let best=null,score=-1;
-   for(const [k,v] of b){if(v>score){score=v;best=k}}
-   if(best){
-    const [r,g,bl]=best.split(",").map(Number);
-    const light=(v)=>Math.min(255,Math.round(v+(255-v)*.42));
-    const rr=light(r),gg=light(g),bb=light(bl);
-    document.documentElement.style.setProperty("--accent2",`rgb(${rr},${gg},${bb})`);
-    document.documentElement.style.setProperty("--accentGlow",`rgba(${rr},${gg},${bb},.50)`);
-    document.documentElement.style.setProperty("--accentGlowSoft",`rgba(${rr},${gg},${bb},.22)`);
-   }
-  }catch(_){}
- }catch(e){}
-}
-let pollingTimer=null, pollBusy=false, commandBusy=false, lastPollAt=0;
-function refreshFast(targetId="",targetPlaying=null){
- if(pollingTimer)clearInterval(pollingTimer);
- let tries=0;
- const started=performance.now();
- pollingTimer=setInterval(async()=>{
-   tries++;
-   await poll(true);
-   const reached=(targetId && trackId!==targetId) ||
-                 (targetPlaying!==null && playing===targetPlaying);
-   if(reached || tries>=35 || performance.now()-started>5000){
-     clearInterval(pollingTimer);pollingTimer=null;
-   }
- },100);
-}
+    const canvas=document.createElement("canvas");
+    const ctx=canvas.getContext("2d",{willReadFrequently:true});
+    const size=32;
+    canvas.width=canvas.height=size;
+    ctx.drawImage(img,0,0,size,size);
+    const data=ctx.getImageData(0,0,size,size).data;
 
-async function poll(force=false){
- if(!token || pollBusy)return;
- const now=performance.now();
- if(!force && now-lastPollAt<450)return;
- pollBusy=true;lastPollAt=now;
- try{
-  const r=await fetch("https://api.spotify.com/v1/me/player",{headers:{Authorization:"Bearer "+token},cache:"no-store"});
-  if(r.status===401){$("status").textContent="Sesión expirada";return}
-  if(r.status===204||!r.ok){$("msg").textContent="Reproduce una canción en Spotify…";return}
-  const d=await r.json(),item=d.item;if(!item){$("msg").textContent="Reproduce una canción en Spotify…";return}
-  duration=item.duration_ms||0;playing=!!d.is_playing;
-  $("current").textContent=fmt(d.progress_ms||0);$("total").textContent=fmt(duration);
-  $("fill").style.width=duration?Math.min(100,d.progress_ms/duration*100)+"%":"0%";
-  $("toggle").textContent=playing?"❚❚":"▶";$("status").textContent=playing?"Reproduciendo":"Pausado";
-  $("app").classList.toggle("playing",playing);
-  if(item.id!==trackId){
-    trackId=item.id;
-    title(item.name);
-    $("artist").textContent=item.artists.map(a=>a.name).join(", ");
-    $("album").textContent=item.album?.name||"";
-    const src=item.album?.images?.[0]?.url;
-    if(src){
-      $("cover").src=src;
-      $("cover").style.display="block";
-      $("placeholder").classList.add("hidden");
-      $("artGlow").style.backgroundImage=`url("${src}")`;
-      colors(src);
+    const buckets=[];
+    for(let i=0;i<data.length;i+=4){
+      const r=data[i],g=data[i+1],b=data[i+2],a=data[i+3];
+      if(a<180) continue;
+
+      const max=Math.max(r,g,b), min=Math.min(r,g,b);
+      const sat=max===0?0:(max-min)/max;
+      const lum=(r+g+b)/3;
+
+      // Ignore near-black / near-white pixels so the lights have color.
+      if(lum<22 || lum>245 || sat<0.12) continue;
+
+      buckets.push({r,g,b,s:sat,l:lum});
     }
-    trackUrl=item.external_urls?.spotify||"";
-    $("open").disabled=!trackUrl;
-    loadLyrics(item);
+
+    // Group similar colors into broad palette buckets.
+    const groups=[];
+    for(const c of buckets){
+      let found=groups.find(g=>{
+        const dr=g.r-c.r, dg=g.g-c.g, db=g.b-c.b;
+        return Math.sqrt(dr*dr+dg*dg+db*db)<55;
+      });
+      if(found){
+        found.r=(found.r*found.n+c.r)/(found.n+1);
+        found.g=(found.g*found.n+c.g)/(found.n+1);
+        found.b=(found.b*found.n+c.b)/(found.n+1);
+        found.n++;
+      }else groups.push({...c,n:1});
+    }
+
+    groups.sort((a,b)=>(b.n*b.s)-(a.n*a.s));
+    const colors=groups.slice(0,4).map(c=>{
+      const boost=1.15;
+      return `rgb(${Math.min(255,Math.round(c.r*boost))},${Math.min(255,Math.round(c.g*boost))},${Math.min(255,Math.round(c.b*boost))})`;
+    });
+
+    if(!colors.length) colors=["rgb(30,215,96)"];
+    applyPalette(colors);
+  }catch(e){
+    applyPalette(["rgb(30,215,96)"]);
   }
-  $("msg").textContent="✓ Sincronizado con Spotify";
- }catch(e){
-  if(!commandBusy)$("msg").textContent="Esperando a Spotify…";
- }finally{pollBusy=false}
 }
-
-async function apiRequest(url, options={}){
- const headers=Object.assign({Authorization:"Bearer "+token},options.headers||{});
- return fetch("https://api.spotify.com/v1"+url,Object.assign({},options,{headers}));
-}
-async function getDevice(){
- try{
-  const r=await apiRequest("/me/player/devices");
-  if(!r.ok)return "";
-  const d=await r.json(), list=d.devices||[];
-  const active=list.find(x=>x.is_active);
-  const chosen=active||list.find(x=>x.type!=="Computer")||list[0];
-  deviceId=chosen?.id||"";
-  return deviceId;
- }catch(e){return ""}
-}
-async function ctl(action){
- if(!token || commandBusy)return;
- commandBusy=true;
- const oldTrack=trackId,oldPlaying=playing;
-
- // Change the visible interface BEFORE waiting for Spotify.
- if(action==="pause" || action==="play"){
-   playing=action==="play";
-   $("toggle").textContent=playing?"❚❚":"▶";
-   $("status").textContent=playing?"Reproduciendo":"Pausado";
-   $("app").classList.toggle("playing",playing);
- }
- if(action==="next"||action==="previous"){
-   $("msg").textContent="Cambiando…";
- }
-
- try{
-   let id=deviceId||await getDevice();
-   if(!id){$("msg").textContent="Abre Spotify y reproduce una canción primero.";return}
-   let url="",options={method:"POST"};
-   if(action==="next")url="/me/player/next?device_id="+encodeURIComponent(id);
-   if(action==="previous")url="/me/player/previous?device_id="+encodeURIComponent(id);
-   if(action==="pause"){url="/me/player/pause?device_id="+encodeURIComponent(id);options.method="PUT";}
-   if(action==="play"){url="/me/player/play?device_id="+encodeURIComponent(id);options.method="PUT";}
-
-   const r=await apiRequest(url,options);
-   if(!r.ok){
-     try{
-       const e=await r.json();
-       // Device may have changed; retry exactly once with the newest device.
-       if(e.error?.status===404){
-         deviceId="";
-         id=await getDevice();
-         if(id){
-           url=url.replace(/device_id=[^&]+/,"device_id="+encodeURIComponent(id));
-           await apiRequest(url,options);
-         }
-       }
-     }catch(_){}
-   }
-
-   // First check immediately, then every 100ms until Spotify reflects it.
-   await poll(true);
-   refreshFast((action==="next"||action==="previous")?oldTrack:"",action==="play"?true:action==="pause"?false:null);
- }finally{
-   commandBusy=false;
- }
-}
-$("connect").onclick=login;
-$("open").onclick=()=>trackUrl&&window.open(trackUrl,"_blank","noopener");$("logout").onclick=()=>{localStorage.removeItem("spotify_access_token");localStorage.removeItem("spotify_connected");localStorage.removeItem("spotify_verifier");localStorage.removeItem("spotify_state");location.reload()};
-$("toggle").onclick=()=>ctl(playing?"pause":"play");
-$("next").onclick=()=>ctl("next");
-$("prev").onclick=()=>ctl("previous");
-$("bar").onclick=async e=>{
- if(!duration)return;
- const id=await getDevice();
- if(!id){$("msg").textContent="Abre Spotify y reproduce una canción primero.";return}
- const r=$("bar").getBoundingClientRect(),ms=Math.round(Math.max(0,Math.min(1,(e.clientX-r.left)/r.width))*duration);
- const resp=await apiRequest("/me/player/seek?position_ms="+ms+"&device_id="+encodeURIComponent(id),{method:"PUT"});
- if(!resp.ok)$("msg").textContent="No se pudo cambiar la posición.";
- setTimeout(poll,350);
-};
-for(let i=0;i<16;i++){const p=document.createElement("i");p.style.left=Math.random()*100+"%";p.style.animationDelay=-Math.random()*5+"s";p.style.setProperty("--x",(Math.random()*180-90)+"px");$("dots").appendChild(p)}
-async function restoreSession(){
- const saved=localStorage.getItem("spotify_access_token");
- if(!saved)return false;
- token=saved;
- $("connect").classList.add("hidden");
- $("controls").classList.remove("hidden");
- $("status").textContent="Conectado";
- $("msg").textContent="Reconectando con Spotify…";
- await poll(true);
- return true;
-}
-(async()=>{const restored=await restoreSession();if(!restored)await callback();})();
-setInterval(()=>poll(false),120);
+function show(track,playing){let image=track.album?.images?.[0]?.url||"";$("title").textContent=track.name||"Sin título";$("artist").textContent=(track.artists||[]).map(a=>a.name).join(", ");$("album").textContent=track.album?.name||"";duration=track.duration_ms||0;$("dur").textContent=time(duration);$("dur").dataset.ms=duration;if(image){$("cover").src=image;$("cover").style.display="block";$("placeholder").style.display="none";$("modalImg").src=image;$("back").style.backgroundImage=`url("${image}")`;$("cover").onload=()=>theme($("cover"));}setPlay(playing);status(playing?"Reproduciendo en Spotify":"Pausado en Spotify",true)}
+async function api(path,opt={}){if(!token||Date.now()>expires){logout();throw Error("auth")}let r=await fetch(API+path,{...opt,headers:{Authorization:"Bearer "+token,"Content-Type":"application/json"}});if(r.status===401){logout();throw Error("auth")}if(!r.ok)throw Error(r.status);return r.status===204?null:r.json()}
+function random(n=96){let c="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~",b=crypto.getRandomValues(new Uint8Array(n));return [...b].map(x=>c[x%c.length]).join("")}
+async function challenge(v){return btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(v))))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")}
+async function login(){let v=random();sessionStorage.setItem("pkce",v);let ch=await challenge(v);let p=new URLSearchParams({client_id:CLIENT_ID,response_type:"code",redirect_uri:REDIRECT_URI,code_challenge_method:"S256",code_challenge:ch,scope:SCOPES.join(" ")});location.href="https://accounts.spotify.com/authorize?"+p}
+async function callback(){let p=new URLSearchParams(location.search),code=p.get("code");if(!code)return;let v=sessionStorage.getItem("pkce");let body=new URLSearchParams({client_id:CLIENT_ID,grant_type:"authorization_code",code,redirect_uri:REDIRECT_URI,code_verifier:v});let r=await fetch("https://accounts.spotify.com/api/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body});if(!r.ok)throw Error("token");let d=await r.json();token=d.access_token;expires=Date.now()+d.expires_in*1000-30000;localStorage.setItem("spotify_access_token",token);localStorage.setItem("spotify_expires_at",expires);history.replaceState({}, "", REDIRECT_URI)}
+async function now(){try{let d=await api("/me/player");if(!d?.item){status("Spotify conectado · sin reproducción");return}if(d.item.id!==currentId){currentId=d.item.id;show(d.item,d.is_playing);await getLyrics(d.item)}else setPlay(d.is_playing);position=d.progress_ms||0;duration=d.item.duration_ms||0;draw()}catch(e){}}
+function draw(){let pct=duration?position/duration*100:0;$("fill").style.width=Math.min(100,pct)+"%";$("cur").textContent=time(position);$("dur").textContent=time(duration);activeLyric()}
+async function control(type){try{if(type==="toggle"){let d=await api("/me/player");if(d?.is_playing)await api("/me/player/pause",{method:"PUT"});else await api("/me/player/play",{method:"PUT"})}else await api("/me/player/"+type,{method:"POST"});setTimeout(now,150)}catch{status("Spotify no pudo ejecutar el control")}}
+async function getLyrics(t){lyrics=[];$("lyrics").innerHTML='<p class="empty">Buscando letras…</p>';try{let u=new URL("https://lrclib.net/api/get");u.searchParams.set("track_name",t.name);u.searchParams.set("artist_name",t.artists?.[0]?.name||"");u.searchParams.set("album_name",t.album?.name||"");u.searchParams.set("duration",Math.round(t.duration_ms/1000));let r=await fetch(u);if(!r.ok)throw Error();let d=await r.json();render(d.syncedLyrics||d.plainLyrics||"")}catch{$("lyrics").innerHTML='<p class="empty">No encontramos letras disponibles en LRCLIB.</p>'}}
+function esc(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+function render(text){lyrics=[];for(let l of text.split("\n")){let m=l.match(/^\[(\d+):(\d+(?:\.\d+)?)\]\s?(.*)$/);if(m)lyrics.push({t:+m[1]*60+ +m[2],s:m[3]||"♪"});else if(l.trim())lyrics.push({t:null,s:l.trim()})}$("lyrics").innerHTML=lyrics.map((x,i)=>`<p class="line" data-i="${i}">${esc(x.s)}</p>`).join("")}
+function activeLyric(){let i=-1;for(let n=0;n<lyrics.length;n++)if(lyrics[n].t!=null&&lyrics[n].t<=position/1000)i=n;if(i<0)return;document.querySelectorAll(".line.active").forEach(x=>x.classList.remove("active"));let e=document.querySelector(`[data-i="${i}"]`);if(e){e.classList.add("active");$("lyrics").scrollTo({top:Math.max(0,e.offsetTop-$("lyrics").clientHeight*.42),behavior:"smooth"})}}
+$("connect").onclick=login;$("play").onclick=()=>control("toggle");$("prev").onclick=()=>control("previous");$("next").onclick=()=>control("next");
+$("bar").onclick=async e=>{if(!token)return;let d=await api("/me/player"),r=e.offsetX/e.currentTarget.clientWidth;await api("/me/player/seek?position_ms="+Math.floor(d.item.duration_ms*r),{method:"PUT"});setTimeout(now,100)};
+$("coverbox").onclick=()=>{if($("cover").src){$("modal").classList.add("open")}};$("close").onclick=()=>$("modal").classList.remove("open");$("modal").onclick=e=>{if(e.target===$("modal"))$("modal").classList.remove("open")};
+function logout(){token=null;localStorage.removeItem("spotify_access_token");localStorage.removeItem("spotify_expires_at");$("connect").textContent="Conectar con Spotify"}
+(async()=>{try{await callback()}catch{}if(token){$("connect").textContent="Spotify conectado ✓";await now();poll=setInterval(now,1500)}setInterval(()=>{if(token&&duration){position=Math.min(duration,position+250);draw()}},250)})();
 </script>
 </body>
 </html>
